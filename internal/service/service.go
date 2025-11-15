@@ -6,7 +6,6 @@ import (
 
 type Repo interface {
 	Add(p *model.Person) error
-	Update(p *model.Person) error
 	UpdateField(personId int, field string, value any) error
 	Delete(id int) error
 	GetAll() ([]model.Person, error)
@@ -48,6 +47,11 @@ func (s *Service) Update(p *model.Person) error {
 			return err
 		}
 	}
+	p2, err := s.repo.GetById(p.ID)
+	if err != nil {
+		return err
+	}
+	*p=*p2
 	return nil
 }
 

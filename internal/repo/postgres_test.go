@@ -75,88 +75,6 @@ func TestPostgresRepo_Add(t *testing.T) {
 	}
 }
 
-func TestPostgresRepo_Update(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
-
-	repo := NewPostgresRepo(db)
-
-	tests := []struct {
-		name    string
-		person  *model.Person
-		mock    func()
-		wantErr bool
-	}{
-		{
-			name: "successful update",
-			person: &model.Person{
-				ID:      1,
-				Name:    "John Doe Updated",
-				Age:     31,
-				Address: "456 Oak St",
-				Work:    "Senior Developer",
-			},
-			mock: func() {
-				mock.ExpectExec("UPDATE persons").
-					WithArgs("John Doe Updated", 31, "456 Oak St", "Senior Developer", 1).
-					WillReturnResult(sqlmock.NewResult(0, 1))
-			},
-			wantErr: false,
-		},
-		{
-			name: "person not found",
-			person: &model.Person{
-				ID:      999,
-				Name:    "John Doe",
-				Age:     30,
-				Address: "123 Main St",
-				Work:    "Developer",
-			},
-			mock: func() {
-				mock.ExpectExec("UPDATE persons").
-					WithArgs("John Doe", 30, "123 Main St", "Developer", 999).
-					WillReturnResult(sqlmock.NewResult(0, 0))
-			},
-			wantErr: true,
-		},
-		{
-			name: "database error",
-			person: &model.Person{
-				ID:      1,
-				Name:    "John Doe",
-				Age:     30,
-				Address: "123 Main St",
-				Work:    "Developer",
-			},
-			mock: func() {
-				mock.ExpectExec("UPDATE persons").
-					WithArgs("John Doe", 30, "123 Main St", "Developer", 1).
-					WillReturnError(errors.New("database error"))
-			},
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mock()
-
-			err := repo.Update(tt.person)
-
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-
-			assert.NoError(t, mock.ExpectationsWereMet())
-		})
-	}
-}
-
 func TestPostgresRepo_Delete(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -356,6 +274,169 @@ func TestPostgresRepo_GetById(t *testing.T) {
 				assert.Equal(t, tt.expected, result)
 			}
 
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestPostgresRepo_UpdateField(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	repo := NewPostgresRepo(db)
+
+	tests := []struct {
+		name        string
+		personId    int
+		field       string
+		value       any
+		mock        func()
+		wantErr     bool
+		expectedErr error
+	}{
+		{
+			name:     "successful update name",
+			personId: 1,
+			field:    "name",
+			value:    "John Updated",
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET name = \\$1 WHERE id = \\$2").
+					WithArgs("John Updated", 1).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:     "successful update age",
+			personId: 1,
+			field:    "age",
+			value:    35,
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET age = \\$1 WHERE id = \\$2").
+					WithArgs(35, 1).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:     "successful update address",
+			personId: 1,
+			field:    "address",
+			value:    "New Address 123",
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET address = \\$1 WHERE id = \\$2").
+					WithArgs("New Address 123", 1).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:     "successful update work",
+			personId: 1,
+			field:    "work",
+			value:    "Senior Developer",
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET work = \\$1 WHERE id = \\$2").
+					WithArgs("Senior Developer", 1).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:     "person not found",
+			personId: 999,
+			field:    "name",
+			value:    "Not Found",
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET name = \\$1 WHERE id = \\$2").
+					WithArgs("Not Found", 999).
+					WillReturnResult(sqlmock.NewResult(0, 0))
+			},
+			wantErr:     true,
+			expectedErr: ErrNotFound,
+		},
+		{
+			name:     "database error",
+			personId: 1,
+			field:    "name",
+			value:    "John",
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET name = \\$1 WHERE id = \\$2").
+					WithArgs("John", 1).
+					WillReturnError(errors.New("database connection failed"))
+			},
+			wantErr: true,
+		},
+		{
+			name:     "invalid field name",
+			personId: 1,
+			field:    "invalid_field",
+			value:    "value",
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET invalid_field = \\$1 WHERE id = \\$2").
+					WithArgs("value", 1).
+					WillReturnError(errors.New("column \\\"invalid_field\\\" of relation \\\"persons\\\" does not exist"))
+			},
+			wantErr: true,
+		},
+		{
+			name:     "rows affected error",
+			personId: 1,
+			field:    "name",
+			value:    "John",
+			mock: func() {
+				result := sqlmock.NewErrorResult(errors.New("rows affected error"))
+				mock.ExpectExec("UPDATE persons SET name = \\$1 WHERE id = \\$2").
+					WithArgs("John", 1).
+					WillReturnResult(result)
+			},
+			wantErr: true,
+		},
+		{
+			name:     "update with nil value",
+			personId: 1,
+			field:    "age",
+			value:    nil,
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET age = \\$1 WHERE id = \\$2").
+					WithArgs(nil, 1).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:     "update with special characters",
+			personId: 1,
+			field:    "address",
+			value:    "123 O'Reilly Street, Apt #4",
+			mock: func() {
+				mock.ExpectExec("UPDATE persons SET address = \\$1 WHERE id = \\$2").
+					WithArgs("123 O'Reilly Street, Apt #4", 1).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mock()
+
+			err := repo.UpdateField(tt.personId, tt.field, tt.value)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				if tt.expectedErr != nil {
+					assert.ErrorIs(t, err, tt.expectedErr)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+
+			// Проверяем что все ожидания выполнены
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}

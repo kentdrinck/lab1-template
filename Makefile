@@ -8,7 +8,7 @@ tidy:
 	go mod tidy
 
 test:
-	go test ./...
+	go test -v ./...
 
 docker-test:
 	docker build -t go-unit-tests-temp -f Dockerfile-test . && \
