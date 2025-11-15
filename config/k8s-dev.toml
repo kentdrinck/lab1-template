@@ -1,4 +1,4 @@
-addr = "localhost:8080"
+addr = ":8080"
 
 [db]
 host = "postgres"
