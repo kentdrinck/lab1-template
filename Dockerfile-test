@@ -1,0 +1,7 @@
+FROM golang:1.25-alpine
+
+WORKDIR /app
+RUN apk add --no-cache git make
+COPY . .
+RUN go mod download
+CMD ["make", "test"]
