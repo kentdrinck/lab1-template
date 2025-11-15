@@ -71,7 +71,7 @@ func (r *RestApi) createPerson(c *gin.Context) {
 	}
 
 	c.Header("Location", fmt.Sprintf("/api/persons/%d", person.ID))
-	c.JSON(http.StatusCreated, gin.H{"id": person.ID})
+	c.Status(http.StatusCreated)
 }
 
 func (r *RestApi) getPerson(c *gin.Context) {

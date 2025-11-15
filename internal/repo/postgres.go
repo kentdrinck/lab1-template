@@ -71,6 +71,35 @@ func (r *PostgresRepo) Update(p *model.Person) error {
 	return nil
 }
 
+func (r *PostgresRepo) UpdateField(personId int, field string, value any) error {
+	query := fmt.Sprintf(`
+		UPDATE persons 
+		SET %s = $1
+		WHERE id = $2
+	`, field)
+
+	result, err := r.db.Exec(
+		query,
+		value,
+		personId,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update person: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
 // Delete удаляет запись о человеке по ID
 func (r *PostgresRepo) Delete(id int) error {
 	query := `DELETE FROM persons WHERE id = $1`
