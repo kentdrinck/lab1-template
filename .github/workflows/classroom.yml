@@ -15,14 +15,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build and deploy with Docker Compose
+      - name: Unit tests
+        run: |
+          make test
+
+      - name: Build and deploy
         run: |
           docker compose down
           docker compose pull
           docker compose up -d --build
           docker image prune -f
-
-      # TODO build, test and deploy project
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
