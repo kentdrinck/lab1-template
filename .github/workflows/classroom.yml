@@ -23,17 +23,21 @@ jobs:
         run: |
           make docker-run
 
-      - name: Run API Tests
-        uses: matt-ball/newman-action@master
-        with:
-          collection: postman/[inst] Lab1.postman_collection.json
-          environment: postman/[inst][heroku] Lab1.postman_environment.json
-          delayRequest: 100
-          reporters: '[ "cli" ]'
+      
   other:
     name: other
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Run API Tests
+          uses: matt-ball/newman-action@master
+          with:
+            collection: postman/[inst] Lab1.postman_collection.json
+            environment: postman/[inst][heroku] Lab1.postman_environment.json
+            delayRequest: 100
+            reporters: '[ "cli" ]'
       - name: Autograding
         uses: education/autograding@v1
         continue-on-error: true
