@@ -6,8 +6,9 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/server/main.go
+COPY cmd cmd
+COPY internal internal
+RUN CGO_ENABLED=0 GOOS=linux go build -o bin/main ./cmd/server/main.go
 
 
 FROM alpine:latest
@@ -15,7 +16,7 @@ RUN apk --no-cache add ca-certificates
 RUN addgroup -S app && adduser -S app -G app
 USER app
 WORKDIR /app
-COPY --from=builder /app/main .
+COPY . .
+COPY --from=builder /app/bin bin
 
-EXPOSE 8080
-CMD ["./main"]
+CMD ["./bin/main"]

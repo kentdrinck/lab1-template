@@ -2,13 +2,18 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"rsoi/internal"
 	"rsoi/internal/config"
 )
 
 func main() {
-	cfg, err := config.LoadConfig("config/development.toml")
+	var configPath string
+	flag.StringVar(&configPath, "config", "config/k8s-dev.toml", "config")
+	flag.Parse()
+
+	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		log.Panic(err)
 	}
