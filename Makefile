@@ -20,6 +20,6 @@ docker-test:
 
 docker-run:
 	docker compose down
-    docker compose pull
-    docker compose up -d --build
-    docker image prune -f
+	docker compose pull
+	docker compose up -d --build
+	docker image prune -f
