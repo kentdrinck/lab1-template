@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"rsoi/internal/model"
 	"rsoi/internal/repo"
@@ -42,6 +43,9 @@ func (r *RestApi) listPersons(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
+	if ps == nil {
+		ps = []model.Person{}
+	}
 	c.JSON(http.StatusOK, ps)
 }
 
@@ -70,7 +74,7 @@ func (r *RestApi) createPerson(c *gin.Context) {
 
 func (r *RestApi) getPerson(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
+	if err != nil || id == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
@@ -86,14 +90,14 @@ func (r *RestApi) getPerson(c *gin.Context) {
 
 func (r *RestApi) updatePerson(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+	if err != nil || id == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 		return
 	}
 
 	var dto UpdatePersonDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Person not found"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
@@ -106,8 +110,12 @@ func (r *RestApi) updatePerson(c *gin.Context) {
 	}
 
 	err = r.service.Update(&person)
-	if err == repo.ErrNotFound {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Person not found"})
+	if err != nil {
+		if err == repo.ErrNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Person not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 
@@ -116,7 +124,7 @@ func (r *RestApi) updatePerson(c *gin.Context) {
 
 func (r *RestApi) deletePerson(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
+	if err != nil || id == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
@@ -125,7 +133,8 @@ func (r *RestApi) deletePerson(c *gin.Context) {
 		if err == repo.ErrNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Person not found"})
 		} else {
-			c.Status(http.StatusInternalServerError)
+			log.Println("ошибка при удалении:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
 	}

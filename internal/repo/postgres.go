@@ -65,7 +65,7 @@ func (r *PostgresRepo) Update(p *model.Person) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("person with id %d not found", p.ID)
+		return ErrNotFound
 	}
 
 	return nil
@@ -86,7 +86,7 @@ func (r *PostgresRepo) Delete(id int) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("person with id %d not found", id)
+		return ErrNotFound
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func (r *PostgresRepo) GetById(id int) (*model.Person, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("person with id %d not found", id)
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get person by id: %w", err)
 	}

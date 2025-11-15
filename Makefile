@@ -2,7 +2,7 @@ app:
 	go build -o bin/app cmd/server/main.go  
 
 run: app
-	./bin/app 
+	./bin/app -config config/development.toml
 
 tidy:
 	go mod tidy
