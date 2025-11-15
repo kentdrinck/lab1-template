@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"rsoi/internal/model"
@@ -69,6 +70,7 @@ func (r *RestApi) createPerson(c *gin.Context) {
 		return
 	}
 
+	c.Header("Location", fmt.Sprintf("/api/persons/%d", person.ID))
 	c.JSON(http.StatusCreated, gin.H{"id": person.ID})
 }
 
@@ -131,7 +133,8 @@ func (r *RestApi) deletePerson(c *gin.Context) {
 
 	if err := r.service.Delete(id); err != nil {
 		if err == repo.ErrNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Person not found"})
+			// c.JSON(http.StatusNotFound, gin.H{"error": "Person not found"})
+			c.Status(http.StatusNoContent)
 		} else {
 			log.Println("ошибка при удалении:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
