@@ -9,32 +9,39 @@ on:
 jobs:
   build:
     name: Autograding
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
+      - name: Build and deploy with Docker Compose
+        run: |
+          docker-compose down
+          docker-compose pull
+          docker-compose up -d --build
+          docker image prune -f
+
       # TODO build, test and deploy project
 
-      - name: Run API Tests
-        uses: matt-ball/newman-action@master
-        with:
-          collection: postman/[inst] Lab1.postman_collection.json
-          environment: postman/[inst][heroku] Lab1.postman_environment.json
-          delayRequest: 100
-          reporters: '[ "cli" ]'
+      # - name: Run API Tests
+      #   uses: matt-ball/newman-action@master
+      #   with:
+      #     collection: postman/[inst] Lab1.postman_collection.json
+      #     environment: postman/[inst][heroku] Lab1.postman_environment.json
+      #     delayRequest: 100
+      #     reporters: '[ "cli" ]'
 
-      - name: Autograding
-        uses: education/autograding@v1
-        continue-on-error: true
+      # - name: Autograding
+      #   uses: education/autograding@v1
+      #   continue-on-error: true
 
-      - name: Github auto grader mark
-        uses: Romanow/google-sheet-autograder-marker@v1.0
-        with:
-          google_token: ${{secrets.GOOGLE_API_KEY}}
-          sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
-          homework_number: 1
-          user_column: 'D'
-          column_offset: 'F'
-          mark: "'+"
+      # - name: Github auto grader mark
+      #   uses: Romanow/google-sheet-autograder-marker@v1.0
+      #   with:
+      #     google_token: ${{secrets.GOOGLE_API_KEY}}
+      #     sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
+      #     homework_number: 1
+      #     user_column: 'D'
+      #     column_offset: 'F'
+      #     mark: "'+"
