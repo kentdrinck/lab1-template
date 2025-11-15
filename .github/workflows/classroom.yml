@@ -15,9 +15,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Unit tests
-      #   run: |
-      #     make docker-test
+      - name: Unit tests
+        run: |
+          make docker-test
 
       - name: Build and deploy
         run: |
@@ -31,16 +31,16 @@ jobs:
           delayRequest: 100
           reporters: '[ "cli" ]'
 
-      # - name: Autograding
-      #   uses: education/autograding@v1
-      #   continue-on-error: true
+      - name: Autograding
+        uses: education/autograding@v1
+        continue-on-error: true
 
-      # - name: Github auto grader mark
-      #   uses: Romanow/google-sheet-autograder-marker@v1.0
-      #   with:
-      #     google_token: ${{secrets.GOOGLE_API_KEY}}
-      #     sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
-      #     homework_number: 1
-      #     user_column: 'D'
-      #     column_offset: 'F'
-      #     mark: "'+"
+      - name: Github auto grader mark
+        uses: Romanow/google-sheet-autograder-marker@v1.0
+        with:
+          google_token: ${{secrets.GOOGLE_API_KEY}}
+          sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
+          homework_number: 1
+          user_column: 'D'
+          column_offset: 'F'
+          mark: "'+"
