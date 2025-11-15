@@ -7,9 +7,6 @@ run: app
 tidy:
 	go mod tidy
 
-docker:
-	docker 
-
 test:
 	go test ./...
 

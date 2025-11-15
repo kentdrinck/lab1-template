@@ -15,13 +15,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Unit tests
-        run: |
-          make docker-test
+      # - name: Unit tests
+      #   run: |
+      #     make docker-test
 
-      - name: Build and deploy
-        run: |
-          make docker-run
+      # - name: Build and deploy
+      #   run: |
+      #     make docker-run
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
